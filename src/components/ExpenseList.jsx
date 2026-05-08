@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useExpenses } from '../context/ExpenseContext';
-import { Search, Trash2, FileSpreadsheet, CheckCircle, Clock, FileText, Calendar } from 'lucide-react';
+import { Search, Trash2, FileSpreadsheet, CheckCircle, Clock, FileText, Calendar, Tag } from 'lucide-react';
 import { format, subDays, startOfMonth, endOfMonth, isWithinInterval, parseISO } from 'date-fns';
 
 const ExpenseList = () => {
@@ -44,12 +44,11 @@ const ExpenseList = () => {
   const filteredExpenses = getFilteredExpenses();
 
   const exportToCSV = () => {
-    const headers = ['Date', 'Description', 'Amount', 'Category', 'Type', 'Worker', 'Status', 'Reimbursed'];
+    const headers = ['Date', 'Description', 'Amount', 'Category', 'Type', 'Worker', 'Status'];
     const rows = filteredExpenses.map(e => [
       e.date, e.description, e.amount, e.category, e.type,
       workers.find(w => w.id === e.worker_id)?.name || 'Unknown', 
-      e.status,
-      e.type === 'legitimate_self' ? (e.reimbursed ? 'YES' : 'NO') : 'N/A'
+      e.status === 'approved' ? 'REIMBURSED' : 'PENDING'
     ]);
 
     const csvContent = "\uFEFF" + [headers, ...rows].map(r => r.join(";")).join("\n");
@@ -61,8 +60,10 @@ const ExpenseList = () => {
     link.click();
   };
 
-  const handlePrint = () => {
-    window.print();
+  const handlePrint = () => window.print();
+
+  const getTypeLabel = (type) => {
+    return type.replace('_', ' ').replace('legitimate', '').replace('false', 'False:').toUpperCase();
   };
 
   return (
@@ -131,11 +132,11 @@ const ExpenseList = () => {
           <thead>
             <tr style={{ borderBottom: '1px solid var(--border-primary)', color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase' }}>
               <th style={{ padding: '1rem' }}>Date</th>
-              <th style={{ padding: '1rem' }}>Expense</th>
+              <th style={{ padding: '1rem' }}>Expense Info</th>
+              <th style={{ padding: '1rem' }}>Type</th>
               <th style={{ padding: '1rem' }}>Worker</th>
               <th style={{ padding: '1rem' }}>Amount</th>
-              <th style={{ padding: '1rem' }}>Company Approval</th>
-              <th style={{ padding: '1rem' }}>Worker Status</th>
+              <th style={{ padding: '1rem' }}>Status</th>
               <th style={{ padding: '1rem' }}></th>
             </tr>
           </thead>
@@ -146,6 +147,11 @@ const ExpenseList = () => {
                 <td style={{ padding: '1rem' }}>
                   <div style={{ fontWeight: '600', fontSize: '0.875rem', color: 'var(--text-primary)' }}>{e.description}</div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{e.category}</div>
+                </td>
+                <td style={{ padding: '1rem' }}>
+                  <span style={{ fontSize: '0.6875rem', fontWeight: '800', color: 'var(--text-muted)', background: 'var(--bg-secondary)', padding: '2px 6px', borderRadius: '4px' }}>
+                    {getTypeLabel(e.type)}
+                  </span>
                 </td>
                 <td style={{ padding: '1rem', fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>{workers.find(w => w.id === e.worker_id)?.name}</td>
                 <td style={{ padding: '1rem', fontWeight: '800', color: 'var(--text-primary)' }}>€{e.amount.toFixed(2)}</td>
@@ -159,24 +165,8 @@ const ExpenseList = () => {
                     }}
                   >
                     {e.status === 'approved' ? <CheckCircle size={14} /> : <Clock size={14} />}
-                    {e.status.toUpperCase()}
+                    {e.status === 'approved' ? 'REIMBURSED' : 'PENDING'}
                   </button>
-                </td>
-                <td style={{ padding: '1rem' }}>
-                  {e.type === 'legitimate_self' ? (
-                    <button 
-                      onClick={() => updateExpense({ ...e, reimbursed: !e.reimbursed })}
-                      style={{ 
-                        fontSize: '0.625rem', fontWeight: '800', padding: '4px 8px', borderRadius: '4px',
-                        background: e.reimbursed ? 'var(--success)' : 'var(--bg-secondary)',
-                        color: e.reimbursed ? 'white' : 'var(--text-secondary)',
-                        border: e.reimbursed ? 'none' : '1px solid var(--border-primary)',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      {e.reimbursed ? 'REIMBURSED' : 'PENDING REIMBURSE'}
-                    </button>
-                  ) : <span style={{ fontSize: '0.625rem', color: 'var(--text-muted)' }}>{e.type.includes('card') ? 'PAID BY CARD' : 'N/A'}</span>}
                 </td>
                 <td style={{ padding: '1rem' }}>
                   <button onClick={() => deleteExpense(e.id)} style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}><Trash2 size={16} /></button>
@@ -193,6 +183,7 @@ const ExpenseList = () => {
           <div key={e.id} className="clean-card" style={{ padding: '1rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
               <div>
+                <p style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', fontWeight: '700', marginBottom: '2px' }}>{getTypeLabel(e.type)}</p>
                 <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>{e.date} • {workers.find(w => w.id === e.worker_id)?.name.split(' ')[0]}</p>
                 <h4 style={{ fontWeight: '700', fontSize: '0.9375rem', color: 'var(--text-primary)' }}>{e.description}</h4>
               </div>
@@ -200,17 +191,12 @@ const ExpenseList = () => {
             </div>
             
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-primary)' }}>
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                <span style={{ 
-                  fontSize: '0.625rem', fontWeight: '800', 
-                  color: e.status === 'approved' ? 'var(--success)' : 'var(--warning)'
-                }}>{e.status.toUpperCase()}</span>
-                {e.type === 'legitimate_self' && (
-                  <span style={{ fontSize: '0.625rem', color: e.reimbursed ? 'var(--success)' : 'var(--text-muted)', fontWeight: '700' }}>
-                    {e.reimbursed ? '• REIMBURSED' : '• PENDING'}
-                  </span>
-                )}
-              </div>
+              <span style={{ 
+                fontSize: '0.6875rem', fontWeight: '800', 
+                color: e.status === 'approved' ? 'var(--success)' : 'var(--warning)'
+              }}>
+                {e.status === 'approved' ? 'REIMBURSED' : 'PENDING'}
+              </span>
               
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <button 
