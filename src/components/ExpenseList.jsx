@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useExpenses } from '../context/ExpenseContext';
-import { Search, Trash2, FileSpreadsheet, CheckCircle, Clock } from 'lucide-react';
+import { Search, Trash2, FileSpreadsheet, CheckCircle, Clock, FileText, Calendar } from 'lucide-react';
 import { format, subDays, startOfMonth, endOfMonth, isWithinInterval, parseISO } from 'date-fns';
 
 const ExpenseList = () => {
@@ -9,7 +9,9 @@ const ExpenseList = () => {
     search: '', 
     type: 'all', 
     workerId: 'all',
-    period: 'all'
+    period: 'all',
+    customStart: '',
+    customEnd: ''
   });
 
   const getFilteredExpenses = () => {
@@ -28,6 +30,11 @@ const ExpenseList = () => {
       } else if (filter.period === 'lastMonth') {
         const lastMonth = subDays(startOfMonth(now), 1);
         matchesPeriod = isWithinInterval(expenseDate, { start: startOfMonth(lastMonth), end: endOfMonth(lastMonth) });
+      } else if (filter.period === 'custom' && filter.customStart && filter.customEnd) {
+        matchesPeriod = isWithinInterval(expenseDate, { 
+          start: parseISO(filter.customStart), 
+          end: parseISO(filter.customEnd) 
+        });
       }
 
       return matchesSearch && matchesType && matchesWorker && matchesPeriod;
@@ -37,10 +44,12 @@ const ExpenseList = () => {
   const filteredExpenses = getFilteredExpenses();
 
   const exportToCSV = () => {
-    const headers = ['Date', 'Description', 'Amount', 'Category', 'Type', 'Worker', 'Status'];
+    const headers = ['Date', 'Description', 'Amount', 'Category', 'Type', 'Worker', 'Status', 'Reimbursed'];
     const rows = filteredExpenses.map(e => [
       e.date, e.description, e.amount, e.category, e.type,
-      workers.find(w => w.id === e.worker_id)?.name || 'Unknown', e.status
+      workers.find(w => w.id === e.worker_id)?.name || 'Unknown', 
+      e.status,
+      e.type === 'legitimate_self' ? (e.reimbursed ? 'YES' : 'NO') : 'N/A'
     ]);
 
     const csvContent = "\uFEFF" + [headers, ...rows].map(r => r.join(";")).join("\n");
@@ -50,6 +59,10 @@ const ExpenseList = () => {
     link.setAttribute("href", url);
     link.setAttribute("download", `Despesas_${format(new Date(), 'yyyy-MM-dd')}.csv`);
     link.click();
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   return (
@@ -67,6 +80,15 @@ const ExpenseList = () => {
         </div>
 
         <select 
+          value={filter.workerId}
+          onChange={e => setFilter({...filter, workerId: e.target.value})}
+          style={{ padding: '0.625rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: '0.5rem', color: 'var(--text-primary)', fontSize: '0.8125rem' }}
+        >
+          <option value="all">All Employees</option>
+          {workers.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+        </select>
+
+        <select 
           value={filter.period}
           onChange={e => setFilter({...filter, period: e.target.value})}
           style={{ padding: '0.625rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: '0.5rem', color: 'var(--text-primary)', fontSize: '0.8125rem' }}
@@ -74,11 +96,33 @@ const ExpenseList = () => {
           <option value="all">All Time</option>
           <option value="last30">Last 30 Days</option>
           <option value="lastMonth">Last Month</option>
+          <option value="custom">Custom Range</option>
         </select>
 
-        <button onClick={exportToCSV} className="secondary-button" style={{ padding: '0.625rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8125rem' }}>
-          <FileSpreadsheet size={16} /> Export
-        </button>
+        {filter.period === 'custom' && (
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <input 
+              type="date" value={filter.customStart}
+              onChange={e => setFilter({...filter, customStart: e.target.value})}
+              style={{ padding: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: '0.5rem', color: 'var(--text-primary)', fontSize: '0.8125rem' }}
+            />
+            <span style={{ color: 'var(--text-muted)' }}>to</span>
+            <input 
+              type="date" value={filter.customEnd}
+              onChange={e => setFilter({...filter, customEnd: e.target.value})}
+              style={{ padding: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: '0.5rem', color: 'var(--text-primary)', fontSize: '0.8125rem' }}
+            />
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: 'var(--space-xs)' }}>
+          <button onClick={exportToCSV} className="secondary-button" style={{ padding: '0.625rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8125rem' }}>
+            <FileSpreadsheet size={16} /> Excel
+          </button>
+          <button onClick={handlePrint} className="secondary-button" style={{ padding: '0.625rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8125rem' }}>
+            <FileText size={16} /> PDF
+          </button>
+        </div>
       </div>
 
       {/* Desktop List */}
@@ -90,7 +134,8 @@ const ExpenseList = () => {
               <th style={{ padding: '1rem' }}>Expense</th>
               <th style={{ padding: '1rem' }}>Worker</th>
               <th style={{ padding: '1rem' }}>Amount</th>
-              <th style={{ padding: '1rem' }}>Status</th>
+              <th style={{ padding: '1rem' }}>Company Approval</th>
+              <th style={{ padding: '1rem' }}>Worker Status</th>
               <th style={{ padding: '1rem' }}></th>
             </tr>
           </thead>
@@ -118,6 +163,22 @@ const ExpenseList = () => {
                   </button>
                 </td>
                 <td style={{ padding: '1rem' }}>
+                  {e.type === 'legitimate_self' ? (
+                    <button 
+                      onClick={() => updateExpense({ ...e, reimbursed: !e.reimbursed })}
+                      style={{ 
+                        fontSize: '0.625rem', fontWeight: '800', padding: '4px 8px', borderRadius: '4px',
+                        background: e.reimbursed ? 'var(--success)' : 'var(--bg-secondary)',
+                        color: e.reimbursed ? 'white' : 'var(--text-secondary)',
+                        border: e.reimbursed ? 'none' : '1px solid var(--border-primary)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {e.reimbursed ? 'REIMBURSED' : 'PENDING REIMBURSE'}
+                    </button>
+                  ) : <span style={{ fontSize: '0.625rem', color: 'var(--text-muted)' }}>{e.type.includes('card') ? 'PAID BY CARD' : 'N/A'}</span>}
+                </td>
+                <td style={{ padding: '1rem' }}>
                   <button onClick={() => deleteExpense(e.id)} style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}><Trash2 size={16} /></button>
                 </td>
               </tr>
@@ -132,17 +193,24 @@ const ExpenseList = () => {
           <div key={e.id} className="clean-card" style={{ padding: '1rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
               <div>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>{e.date}</p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>{e.date} • {workers.find(w => w.id === e.worker_id)?.name.split(' ')[0]}</p>
                 <h4 style={{ fontWeight: '700', fontSize: '0.9375rem', color: 'var(--text-primary)' }}>{e.description}</h4>
               </div>
               <p style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--text-primary)' }}>€{e.amount.toFixed(2)}</p>
             </div>
             
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-primary)' }}>
-              <span style={{ 
-                fontSize: '0.625rem', fontWeight: '800', 
-                color: e.status === 'approved' ? 'var(--success)' : 'var(--warning)'
-              }}>{e.status.toUpperCase()}</span>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <span style={{ 
+                  fontSize: '0.625rem', fontWeight: '800', 
+                  color: e.status === 'approved' ? 'var(--success)' : 'var(--warning)'
+                }}>{e.status.toUpperCase()}</span>
+                {e.type === 'legitimate_self' && (
+                  <span style={{ fontSize: '0.625rem', color: e.reimbursed ? 'var(--success)' : 'var(--text-muted)', fontWeight: '700' }}>
+                    {e.reimbursed ? '• REIMBURSED' : '• PENDING'}
+                  </span>
+                )}
+              </div>
               
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <button 
