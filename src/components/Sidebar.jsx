@@ -1,44 +1,46 @@
 import React from 'react';
-import { LayoutDashboard, Receipt, User, LogOut, BarChart3, Users } from 'lucide-react';
+import { LayoutDashboard, Receipt, User, BarChart3, Users } from 'lucide-react';
 import { useExpenses } from '../context/ExpenseContext';
 
 const Sidebar = ({ activeTab, setActiveTab }) => {
   const { workers, currentWorkerId, setCurrentWorkerId } = useExpenses();
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
     { id: 'expenses', label: 'Expenses', icon: Receipt },
   ];
 
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="glass-card desktop-only" style={{ 
-        width: '280px', 
-        margin: 'var(--space-md)', 
-        padding: 'var(--space-lg)',
+      <aside className="desktop-only" style={{ 
+        width: '260px', 
+        padding: 'var(--space-xl) var(--space-lg)',
         display: 'flex',
         flexDirection: 'column',
-        gap: 'var(--space-xl)',
-        height: 'calc(100vh - 2 * var(--space-md))',
+        gap: '2.5rem',
+        height: '100vh',
         position: 'sticky',
-        top: 'var(--space-md)'
+        top: 0,
+        background: 'var(--bg-primary)',
+        borderRight: '1px solid var(--border-primary)'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
-          <div className="premium-gradient" style={{ 
-            width: '40px', 
-            height: '40px', 
-            borderRadius: '10px',
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', padding: '0 0.5rem' }}>
+          <div style={{ 
+            width: '32px', 
+            height: '32px', 
+            borderRadius: '8px',
+            background: 'var(--accent-primary)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
           }}>
-            <BarChart3 size={24} color="white" />
+            <BarChart3 size={18} color="var(--bg-primary)" />
           </div>
-          <span style={{ fontWeight: '700', fontSize: '1.25rem' }}>PickWell</span>
+          <span style={{ fontWeight: '800', fontSize: '1.125rem', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>PickWell</span>
         </div>
 
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
           {menuItems.map((item) => (
             <button
               key={item.id}
@@ -46,28 +48,32 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 'var(--space-md)',
-                padding: '0.75rem var(--space-md)',
-                borderRadius: '0.75rem',
-                color: activeTab === item.id ? 'white' : 'var(--text-secondary)',
-                background: activeTab === item.id ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                gap: '0.75rem',
+                padding: '0.625rem 0.75rem',
+                borderRadius: '0.5rem',
+                color: activeTab === item.id ? 'var(--text-primary)' : 'var(--text-secondary)',
+                background: activeTab === item.id ? 'var(--bg-hover)' : 'transparent',
+                border: 'none',
+                fontWeight: activeTab === item.id ? '600' : '500',
+                fontSize: '0.875rem',
+                cursor: 'pointer',
                 textAlign: 'left',
                 width: '100%',
                 transition: 'all 0.2s'
               }}
             >
-              <item.icon size={20} />
-              <span style={{ fontWeight: '500' }}>{item.label}</span>
+              <item.icon size={18} />
+              <span>{item.label}</span>
             </button>
           ))}
         </nav>
 
         <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-          <div style={{ padding: 'var(--space-sm) 0', borderTop: '1px solid var(--glass-border)' }}>
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 'var(--space-sm)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Switch Worker
+          <div style={{ padding: 'var(--space-md)', background: 'var(--bg-secondary)', borderRadius: '0.75rem' }}>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 'var(--space-sm)', fontWeight: '700', textTransform: 'uppercase' }}>
+              Worker
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
               {workers.map(worker => (
                 <button
                   key={worker.id}
@@ -77,14 +83,19 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
                     alignItems: 'center',
                     gap: 'var(--space-sm)',
                     padding: '0.5rem',
-                    borderRadius: '0.5rem',
-                    color: currentWorkerId === worker.id ? 'white' : 'var(--text-secondary)',
-                    background: currentWorkerId === worker.id ? 'rgba(129, 140, 248, 0.2)' : 'transparent',
-                    width: '100%'
+                    borderRadius: '0.4rem',
+                    border: 'none',
+                    color: currentWorkerId === worker.id ? 'var(--text-primary)' : 'var(--text-secondary)',
+                    background: currentWorkerId === worker.id ? 'var(--bg-primary)' : 'transparent',
+                    boxShadow: currentWorkerId === worker.id ? 'var(--shadow-sm)' : 'none',
+                    width: '100%',
+                    cursor: 'pointer',
+                    fontSize: '0.8125rem',
+                    fontWeight: '600'
                   }}
                 >
-                  <User size={16} />
-                  <span style={{ fontSize: '0.875rem' }}>{worker.name}</span>
+                  <User size={14} />
+                  <span>{worker.name}</span>
                 </button>
               ))}
             </div>
@@ -95,63 +106,53 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
       {/* Mobile Bottom Navigation */}
       <div className="mobile-only" style={{
         position: 'fixed',
-        bottom: '1.5rem',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: '90%',
-        maxWidth: '400px',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '72px',
         zIndex: 100,
+        background: 'var(--bg-primary)',
+        borderTop: '1px solid var(--border-primary)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-around',
+        padding: '0 1rem',
       }}>
-        <div className="glass-card" style={{
-          width: '100%',
-          height: '64px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-around',
-          padding: '0 1.5rem',
-          background: 'rgba(15, 15, 18, 0.8)',
-          borderRadius: '2rem',
-          border: '1px solid rgba(255, 255, 255, 0.15)',
-        }}>
-          {menuItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '4px',
-                color: activeTab === item.id ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                transition: 'all 0.3s'
-              }}
-            >
-              <item.icon size={22} style={{ transform: activeTab === item.id ? 'scale(1.1)' : 'scale(1)' }} />
-              <span style={{ fontSize: '0.625rem', fontWeight: '700' }}>{item.label.toUpperCase()}</span>
-            </button>
-          ))}
-          
+        {menuItems.map((item) => (
           <button
-            onClick={() => setCurrentWorkerId(currentWorkerId === 1 ? 2 : 1)}
+            key={item.id}
+            onClick={() => setActiveTab(item.id)}
             style={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               gap: '4px',
-              color: 'var(--text-secondary)',
+              border: 'none',
+              background: 'none',
+              color: activeTab === item.id ? 'var(--text-primary)' : 'var(--text-muted)',
+              transition: 'all 0.2s'
             }}
           >
-            <div style={{ 
-              background: 'rgba(255,255,255,0.05)', 
-              padding: '6px', 
-              borderRadius: '50%',
-              display: 'flex', alignItems: 'center', justifyContent: 'center'
-            }}>
-              <Users size={20} />
-            </div>
-            <span style={{ fontSize: '0.625rem', fontWeight: '700' }}>SWITCH</span>
+            <item.icon size={22} />
+            <span style={{ fontSize: '0.6875rem', fontWeight: '700' }}>{item.label}</span>
           </button>
-        </div>
+        ))}
+        
+        <button
+          onClick={() => setCurrentWorkerId(currentWorkerId === 1 ? 2 : 1)}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '4px',
+            border: 'none',
+            background: 'none',
+            color: 'var(--text-muted)',
+          }}
+        >
+          <Users size={22} />
+          <span style={{ fontSize: '0.6875rem', fontWeight: '700' }}>SWITCH</span>
+        </button>
       </div>
     </>
   );

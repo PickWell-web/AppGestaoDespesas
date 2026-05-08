@@ -4,7 +4,7 @@ import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import ExpenseList from './components/ExpenseList';
 import AddExpenseModal from './components/AddExpenseModal';
-import { Bell, Plus } from 'lucide-react';
+import { Bell, Plus, Moon, Sun } from 'lucide-react';
 import './index.css';
 
 const NotificationToast = () => {
@@ -16,13 +16,14 @@ const NotificationToast = () => {
       zIndex: 2000, display: 'flex', flexDirection: 'column', gap: '0.5rem' 
     }}>
       {notifications.map(n => (
-        <div key={n.id} className="glass-card" style={{ 
-          padding: '1rem', background: 'rgba(16, 185, 129, 0.2)', 
-          border: '1px solid var(--success)', minWidth: '280px',
+        <div key={n.id} className="clean-card" style={{ 
+          padding: '1rem', background: 'var(--success)', color: 'white',
+          border: 'none', minWidth: '280px',
           display: 'flex', alignItems: 'center', gap: '1rem',
-          animation: 'slideIn 0.3s ease-out'
+          animation: 'slideIn 0.3s ease-out',
+          boxShadow: 'var(--shadow-lg)'
         }}>
-          <Bell size={20} color="var(--success)" />
+          <Bell size={20} />
           <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>{n.message}</span>
         </div>
       ))}
@@ -39,24 +40,21 @@ const NotificationToast = () => {
 function AppContent() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { loading, workers, currentWorkerId } = useExpenses();
-
-  const currentWorker = workers.find(w => w.id === currentWorkerId);
+  const { loading, theme, toggleTheme } = useExpenses();
 
   if (loading) {
     return (
       <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-primary)' }}>
-        <div className="premium-text-gradient" style={{ fontSize: '1.5rem', fontWeight: '800' }}>Loading Expenses...</div>
+        <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="app-container" style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-primary)' }}>
+    <div className="app-container" style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-secondary)' }}>
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       
       <main style={{ flex: 1, padding: 'var(--space-xl)', overflowY: 'auto' }}>
-        {/* Responsive Header */}
         <header style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
@@ -64,30 +62,27 @@ function AppContent() {
           marginBottom: 'var(--space-xl)'
         }}>
           <div>
-            <h1 className="premium-text-gradient" style={{ fontSize: '1.75rem', fontWeight: '800', lineHeight: 1.2 }}>
-              {activeTab === 'dashboard' ? 'Dashboard' : 'Expenses'}
+            <h1 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.025em' }}>
+              {activeTab === 'dashboard' ? 'Overview' : 'Expenses'}
             </h1>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-              Welcome back, <span style={{ color: 'white', fontWeight: '600' }}>{currentWorker?.name.split(' ')[0]}</span>
-            </p>
           </div>
           
-          <button 
-            className="premium-gradient desktop-only"
-            onClick={() => setIsModalOpen(true)}
-            style={{ 
-              padding: '0.75rem 1.5rem', 
-              borderRadius: '0.75rem', 
-              color: 'white', 
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              boxShadow: '0 4px 15px rgba(99, 102, 241, 0.4)'
-            }}
-          >
-            <Plus size={20} /> New Expense
-          </button>
+          <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'center' }}>
+            <button 
+              onClick={toggleTheme}
+              className="secondary-button"
+              style={{ padding: '0.625rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+            </button>
+            
+            <button 
+              className="primary-button desktop-only"
+              onClick={() => setIsModalOpen(true)}
+            >
+              <Plus size={20} /> Add Expense
+            </button>
+          </div>
         </header>
 
         {activeTab === 'dashboard' ? <Dashboard /> : <ExpenseList />}
@@ -95,7 +90,7 @@ function AppContent() {
 
       {/* Mobile Floating Action Button */}
       <button 
-        className="mobile-only premium-gradient"
+        className="mobile-only primary-button"
         onClick={() => setIsModalOpen(true)}
         style={{
           position: 'fixed',
@@ -104,13 +99,9 @@ function AppContent() {
           width: '56px',
           height: '56px',
           borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
           justifyContent: 'center',
-          color: 'white',
-          boxShadow: '0 8px 24px rgba(99, 102, 241, 0.5)',
+          boxShadow: 'var(--shadow-lg)',
           zIndex: 101,
-          border: 'none'
         }}
       >
         <Plus size={28} />

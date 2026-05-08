@@ -7,12 +7,19 @@ export const ExpenseProvider = ({ children }) => {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState([]);
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [workers, setWorkers] = useState([
     { id: 1, name: 'Gonçalo Andrade', budget: 500 },
     { id: 2, name: 'Simão Coimbra', budget: 500 }
   ]);
 
   const [currentWorkerId, setCurrentWorkerId] = useState(1);
+
+  // Apply theme to document
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
 
   // Fetch initial data
   useEffect(() => {
@@ -39,12 +46,10 @@ export const ExpenseProvider = ({ children }) => {
         } else if (payload.eventType === 'UPDATE') {
           setExpenses(prev => prev.map(e => e.id === payload.new.id ? payload.new : e));
           
-          // Notification logic: If status changed to 'approved'
           if (payload.new.status === 'approved' && payload.old.status !== 'approved') {
-            const expense = payload.new;
             addNotification({
               id: Date.now(),
-              message: `Expense "${expense.description}" (€${expense.amount}) has been APPROVED!`,
+              message: `Expense "${payload.new.description}" has been approved!`,
               type: 'success'
             });
           }
@@ -61,7 +66,6 @@ export const ExpenseProvider = ({ children }) => {
 
   const addNotification = (notif) => {
     setNotifications(prev => [notif, ...prev]);
-    // Auto-remove notification after 5 seconds
     setTimeout(() => {
       setNotifications(prev => prev.filter(n => n.id !== notif.id));
     }, 5000);
@@ -72,7 +76,6 @@ export const ExpenseProvider = ({ children }) => {
       .from('expenses')
       .insert([{ ...expense, status: 'pending', reimbursed: false }])
       .select();
-    
     return { data, error };
   };
 
@@ -139,7 +142,9 @@ export const ExpenseProvider = ({ children }) => {
       updateExpense,
       getWorkerStats,
       notifications,
-      setNotifications
+      theme,
+      setTheme,
+      toggleTheme: () => setTheme(prev => prev === 'light' ? 'dark' : 'light')
     }}>
       {children}
     </ExpenseContext.Provider>
