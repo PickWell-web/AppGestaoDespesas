@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useExpenses } from '../context/ExpenseContext';
-import { X, Save } from 'lucide-react';
+import { X, Save, Paperclip } from 'lucide-react';
 
 const AddExpenseModal = ({ onClose }) => {
   const { addExpense, currentWorkerId, workers } = useExpenses();
   const [loading, setLoading] = useState(false);
+  const [file, setFile] = useState(null);
   const [formData, setFormData] = useState({
     description: '',
     amount: '',
@@ -27,17 +28,22 @@ const AddExpenseModal = ({ onClose }) => {
     if (!formData.amount || !formData.description) return;
     
     setLoading(true);
-    const { error } = await addExpense({
-      ...formData,
-      amount: parseFloat(formData.amount)
-    });
-    
-    if (error) {
-      alert('Error: ' + error.message);
-    } else {
-      onClose();
+    try {
+      const { error } = await addExpense({
+        ...formData,
+        amount: parseFloat(formData.amount)
+      }, file);
+      
+      if (error) {
+        alert('Error: ' + error.message);
+      } else {
+        onClose();
+      }
+    } catch (err) {
+      alert('Error uploading file: ' + err.message);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -108,6 +114,30 @@ const AddExpenseModal = ({ onClose }) => {
               >
                 {workers.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
               </select>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <label style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)' }}>Invoice Attachment</label>
+            <div style={{ 
+              display: 'flex', alignItems: 'center', gap: '1rem',
+              padding: '0.75rem', borderRadius: '0.5rem',
+              background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)',
+              position: 'relative'
+            }}>
+              <Paperclip size={18} style={{ color: file ? 'var(--success)' : 'var(--text-muted)' }} />
+              <span style={{ fontSize: '0.8125rem', color: file ? 'var(--text-primary)' : 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {file ? file.name : 'No file selected'}
+              </span>
+              <input 
+                type="file" 
+                accept="image/*,application/pdf"
+                onChange={e => setFile(e.target.files[0])}
+                style={{ 
+                  position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, 
+                  opacity: 0, cursor: 'pointer' 
+                }}
+              />
             </div>
           </div>
 

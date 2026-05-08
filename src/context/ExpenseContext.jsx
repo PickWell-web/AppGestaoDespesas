@@ -71,10 +71,32 @@ export const ExpenseProvider = ({ children }) => {
     }, 5000);
   };
 
-  const addExpense = async (expense) => {
+  const addExpense = async (expense, file) => {
+    let receipt_url = null;
+
+    if (file) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('receipts')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('receipts')
+        .getPublicUrl(filePath);
+      
+      receipt_url = publicUrl;
+    }
+
     const { data, error } = await supabase
       .from('expenses')
-      .insert([{ ...expense, status: 'pending', reimbursed: false }])
+      .insert([{ ...expense, status: 'pending', reimbursed: false, receipt_url }])
       .select();
     return { data, error };
   };

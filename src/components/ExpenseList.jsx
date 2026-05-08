@@ -151,8 +151,21 @@ const ExpenseList = () => {
               <tr key={e.id} style={{ borderBottom: '1px solid var(--border-primary)' }}>
                 <td style={{ padding: '1rem', fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>{e.date}</td>
                 <td style={{ padding: '1rem' }}>
-                  <div style={{ fontWeight: '600', fontSize: '0.875rem', color: 'var(--text-primary)' }}>{e.description}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{e.category}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div>
+                      <div style={{ fontWeight: '600', fontSize: '0.875rem', color: 'var(--text-primary)' }}>{e.description}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{e.category}</div>
+                    </div>
+                    {e.receipt_url && (
+                      <a 
+                        href={e.receipt_url} target="_blank" rel="noopener noreferrer"
+                        style={{ color: 'var(--accent-primary)', display: 'flex', alignItems: 'center' }}
+                        title="View Invoice"
+                      >
+                        <Paperclip size={14} />
+                      </a>
+                    )}
+                  </div>
                 </td>
                 <td style={{ padding: '1rem' }}>
                   <span style={{ fontSize: '0.6875rem', fontWeight: '800', color: 'var(--text-muted)', background: 'var(--bg-secondary)', padding: '2px 6px', borderRadius: '4px' }}>
@@ -195,7 +208,14 @@ const ExpenseList = () => {
               <div>
                 <p style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', fontWeight: '700', marginBottom: '2px' }}>{getTypeLabel(e.type)}</p>
                 <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>{e.date} • {workers.find(w => w.id === e.worker_id)?.name.split(' ')[0]}</p>
-                <h4 style={{ fontWeight: '700', fontSize: '0.9375rem', color: 'var(--text-primary)' }}>{e.description}</h4>
+                <h4 style={{ fontWeight: '700', fontSize: '0.9375rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  {e.description}
+                  {e.receipt_url && (
+                    <a href={e.receipt_url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-primary)' }}>
+                      <Paperclip size={14} />
+                    </a>
+                  )}
+                </h4>
               </div>
               <p style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--text-primary)' }}>€{e.amount.toFixed(2)}</p>
             </div>
