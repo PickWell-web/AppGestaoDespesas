@@ -131,7 +131,7 @@ const AddExpenseModal = ({ onClose }) => {
               </span>
               <input 
                 type="file" 
-                accept="image/*,application/pdf"
+                accept=".jpg, .jpeg, .png, .pdf, image/*, application/pdf"
                 onChange={e => setFile(e.target.files[0])}
                 style={{ 
                   position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, 
