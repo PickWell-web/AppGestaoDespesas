@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useExpenses } from '../context/ExpenseContext';
-import { Search, Trash2, FileSpreadsheet, CheckCircle, Clock, FileText, Calendar, Tag } from 'lucide-react';
+import { Search, Trash2, FileSpreadsheet, CheckCircle, Clock, FileText, Calendar, Tag, Paperclip } from 'lucide-react';
 import { format, subDays, startOfMonth, endOfMonth, isWithinInterval, parseISO } from 'date-fns';
 
 const ExpenseList = () => {
