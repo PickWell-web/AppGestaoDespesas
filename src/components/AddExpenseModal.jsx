@@ -11,22 +11,20 @@ const AddExpenseModal = ({ onClose }) => {
     date: new Date().toISOString().split('T')[0],
     category: 'Food',
     type: 'legitimate_self',
-    workerId: currentWorkerId,
-    invoiceNumber: '',
-    taxId: ''
+    worker_id: currentWorkerId,
+    invoice_number: '',
+    tax_id: ''
   });
 
   const categories = ['Food', 'Transport', 'Utilities', 'Software', 'Hardware', 'Office', 'Other'];
   const types = [
-    { id: 'legitimate_self', label: 'Legitimate (Self Paid)' },
-    { id: 'legitimate_card', label: 'Legitimate (Company Card)' },
-    { id: 'false_self', label: 'False Expense (Self Paid)' },
-    { id: 'false_card', label: 'False Expense (Company Card)' }
+    { id: 'legitimate_self', label: 'Legit - Self Paid' },
+    { id: 'legitimate_card', label: 'Legit - Company Card' },
+    { id: 'false_self', label: 'False - Self Paid' },
+    { id: 'false_card', label: 'False - Company Card' }
   ];
 
   const parsePortugueseQR = (qrString) => {
-    // Basic ATUD parser for Portuguese invoices
-    // Format: A:513151325*B:513151325*...*I1:100.00*
     const fields = qrString.split('*');
     const data = {};
     fields.forEach(field => {
@@ -35,16 +33,14 @@ const AddExpenseModal = ({ onClose }) => {
     });
 
     return {
-      taxId: data['A'] || '', // Issuer NIF
-      amount: data['I1'] ? parseFloat(data['I1']) : 0, // Total Amount
+      tax_id: data['A'] || '', 
+      amount: data['I1'] ? parseFloat(data['I1']) : 0, 
       date: data['F'] ? `${data['F'].slice(0, 4)}-${data['F'].slice(4, 6)}-${data['F'].slice(6, 8)}` : '',
-      invoiceNumber: data['G'] || ''
+      invoice_number: data['G'] || ''
     };
   };
 
   const handleQRScan = () => {
-    // In a real app, this would open a camera. 
-    // For this demo, we'll prompt for the QR string or use a mock.
     const mockQR = "A:513151325*B:999999999*C:PT*D:FT*E:N*F:20240508*G:FT 2024/123*H:0*I1:45.50*I3:0.00*I4:0.00*I5:8.51*I7:36.99*I8:8.51*";
     const result = parsePortugueseQR(mockQR);
     
@@ -52,25 +48,28 @@ const AddExpenseModal = ({ onClose }) => {
       ...prev,
       amount: result.amount,
       date: result.date || prev.date,
-      taxId: result.taxId,
-      invoiceNumber: result.invoiceNumber,
-      description: `Invoice ${result.invoiceNumber}`
+      tax_id: result.tax_id,
+      invoice_number: result.invoice_number,
+      description: `Invoice ${result.invoice_number}`
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.amount || !formData.description) return;
     
     setLoading(true);
-    setTimeout(() => {
-      addExpense({
-        ...formData,
-        amount: parseFloat(formData.amount)
-      });
-      setLoading(false);
+    const { error } = await addExpense({
+      ...formData,
+      amount: parseFloat(formData.amount)
+    });
+    
+    if (error) {
+      alert('Error saving expense: ' + error.message);
+    } else {
       onClose();
-    }, 500);
+    }
+    setLoading(false);
   };
 
   return (
@@ -147,8 +146,8 @@ const AddExpenseModal = ({ onClose }) => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
               <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Worker</label>
               <select 
-                value={formData.workerId}
-                onChange={e => setFormData({...formData, workerId: parseInt(e.target.value)})}
+                value={formData.worker_id}
+                onChange={e => setFormData({...formData, worker_id: parseInt(e.target.value)})}
                 style={{ background: 'var(--bg-card)', border: '1px solid var(--glass-border)', padding: '0.75rem', borderRadius: '0.5rem', color: 'white' }}
               >
                 {workers.map(w => <option key={w.id} value={w.id} style={{ background: '#1a1a1a', color: 'white' }}>{w.name}</option>)}

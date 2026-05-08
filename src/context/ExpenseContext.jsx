@@ -1,54 +1,100 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
 const ExpenseContext = createContext();
 
 export const ExpenseProvider = ({ children }) => {
-  const [expenses, setExpenses] = useState(() => {
-    const saved = localStorage.getItem('expenses');
-    if (saved) return JSON.parse(saved);
-    
-    // Initial dummy data
-    const initialData = [
-      { id: 1, description: 'Lunch with Clients', amount: 45.50, date: new Date().toISOString().split('T')[0], category: 'Food', type: 'legitimate_self', workerId: 1, invoiceNumber: 'FT 2024/101' },
-      { id: 2, description: 'Fuel Refill', amount: 60.00, date: new Date().toISOString().split('T')[0], category: 'Transport', type: 'legitimate_card', workerId: 1, invoiceNumber: 'FT 2024/102' },
-      { id: 3, description: 'Office Supplies', amount: 25.00, date: new Date().toISOString().split('T')[0], category: 'Office', type: 'false', workerId: 1, invoiceNumber: 'FT 2024/103' },
-      { id: 4, description: 'Software Subscription', amount: 15.99, date: new Date().toISOString().split('T')[0], category: 'Software', type: 'legitimate_card', workerId: 2, invoiceNumber: 'FT 2024/201' },
-    ];
-    return initialData;
-  });
-
-  const [workers, setWorkers] = useState(() => {
-    const saved = localStorage.getItem('workers');
-    return saved ? JSON.parse(saved) : [
-      { id: 1, name: 'Gonçalo Andrade', budget: 500 },
-      { id: 2, name: 'Simão Coimbra', budget: 500 }
-    ];
-  });
+  const [expenses, setExpenses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [notifications, setNotifications] = useState([]);
+  const [workers, setWorkers] = useState([
+    { id: 1, name: 'Gonçalo Andrade', budget: 500 },
+    { id: 2, name: 'Simão Coimbra', budget: 500 }
+  ]);
 
   const [currentWorkerId, setCurrentWorkerId] = useState(1);
 
+  // Fetch initial data
   useEffect(() => {
-    localStorage.setItem('expenses', JSON.stringify(expenses));
-  }, [expenses]);
+    const fetchExpenses = async () => {
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*')
+        .order('date', { ascending: false });
+      
+      if (!error) {
+        setExpenses(data);
+      }
+      setLoading(false);
+    };
 
-  useEffect(() => {
-    localStorage.setItem('workers', JSON.stringify(workers));
-  }, [workers]);
+    fetchExpenses();
 
-  const addExpense = (expense) => {
-    setExpenses(prev => [...prev, { ...expense, id: Date.now(), createdAt: new Date().toISOString() }]);
+    // Subscribe to real-time changes
+    const subscription = supabase
+      .channel('expenses_changes')
+      .on('postgres_changes', { event: '*', table: 'expenses' }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          setExpenses(prev => [payload.new, ...prev]);
+        } else if (payload.eventType === 'UPDATE') {
+          setExpenses(prev => prev.map(e => e.id === payload.new.id ? payload.new : e));
+          
+          // Notification logic: If status changed to 'approved'
+          if (payload.new.status === 'approved' && payload.old.status !== 'approved') {
+            const expense = payload.new;
+            addNotification({
+              id: Date.now(),
+              message: `Expense "${expense.description}" (€${expense.amount}) has been APPROVED!`,
+              type: 'success'
+            });
+          }
+        } else if (payload.eventType === 'DELETE') {
+          setExpenses(prev => prev.filter(e => e.id !== payload.old.id));
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, []);
+
+  const addNotification = (notif) => {
+    setNotifications(prev => [notif, ...prev]);
+    // Auto-remove notification after 5 seconds
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(n => n.id !== notif.id));
+    }, 5000);
   };
 
-  const deleteExpense = (id) => {
-    setExpenses(prev => prev.filter(e => e.id !== id));
+  const addExpense = async (expense) => {
+    const { data, error } = await supabase
+      .from('expenses')
+      .insert([{ ...expense, status: 'pending', reimbursed: false }])
+      .select();
+    
+    return { data, error };
   };
 
-  const updateExpense = (updatedExpense) => {
-    setExpenses(prev => prev.map(e => e.id === updatedExpense.id ? updatedExpense : e));
+  const deleteExpense = async (id) => {
+    const { error } = await supabase
+      .from('expenses')
+      .delete()
+      .eq('id', id);
+    return { error };
+  };
+
+  const updateExpense = async (updatedExpense) => {
+    const { data, error } = await supabase
+      .from('expenses')
+      .update(updatedExpense)
+      .eq('id', updatedExpense.id)
+      .select();
+    return { data, error };
   };
 
   const getWorkerStats = (workerId) => {
-    const workerExpenses = expenses.filter(e => e.workerId === workerId);
+    const workerExpenses = expenses.filter(e => e.worker_id === workerId);
     const month = new Date().getMonth();
     const year = new Date().getFullYear();
     
@@ -66,7 +112,7 @@ export const ExpenseProvider = ({ children }) => {
       .reduce((acc, curr) => acc + Number(curr.amount), 0);
 
     const falseExpenses = monthlyExpenses
-      .filter(e => e.type === 'false' || e.type === 'false_self' || e.type === 'false_card')
+      .filter(e => e.type === 'false_self' || e.type === 'false_card')
       .reduce((acc, curr) => acc + Number(curr.amount), 0);
 
     const worker = workers.find(w => w.id === workerId);
@@ -84,6 +130,7 @@ export const ExpenseProvider = ({ children }) => {
   return (
     <ExpenseContext.Provider value={{
       expenses,
+      loading,
       workers,
       currentWorkerId,
       setCurrentWorkerId,
@@ -91,7 +138,8 @@ export const ExpenseProvider = ({ children }) => {
       deleteExpense,
       updateExpense,
       getWorkerStats,
-      setWorkers
+      notifications,
+      setNotifications
     }}>
       {children}
     </ExpenseContext.Provider>

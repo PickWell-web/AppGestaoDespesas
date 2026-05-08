@@ -33,7 +33,7 @@ const Dashboard = () => {
   const budgetUsagePercent = Math.min((stats.falseExpenses / (worker?.budget || 1)) * 100, 100);
 
   const recentExpenses = expenses
-    .filter(e => e.workerId === currentWorkerId)
+    .filter(e => e.worker_id === currentWorkerId)
     .sort((a, b) => new Date(b.date) - new Date(a.date))
     .slice(0, 5);
 
@@ -94,7 +94,12 @@ const Dashboard = () => {
                       <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{expense.date} • {expense.category}</p>
                     </div>
                   </div>
-                  <span style={{ fontWeight: '700' }}>€{expense.amount.toFixed(2)}</span>
+                  <div style={{ textAlign: 'right' }}>
+                    <p style={{ fontWeight: '700' }}>€{expense.amount.toFixed(2)}</p>
+                    <p style={{ fontSize: '0.625rem', color: expense.status === 'approved' ? 'var(--success)' : 'var(--warning)' }}>
+                      {expense.status.toUpperCase()}
+                    </p>
+                  </div>
                 </div>
               ))
             )}

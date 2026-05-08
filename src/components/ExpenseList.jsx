@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useExpenses } from '../context/ExpenseContext';
-import { Search, Download, Trash2, Filter, FileSpreadsheet, FileText, Calendar, CheckCircle2, Circle } from 'lucide-react';
+import { Search, Download, Trash2, Filter, FileSpreadsheet, FileText, Calendar, CheckCircle2, Circle, Clock, CheckCircle } from 'lucide-react';
 import { format, subDays, startOfMonth, endOfMonth, isWithinInterval, parseISO } from 'date-fns';
 
 const ExpenseList = () => {
@@ -19,7 +19,7 @@ const ExpenseList = () => {
       const matchesSearch = e.description.toLowerCase().includes(filter.search.toLowerCase()) || 
                             e.category.toLowerCase().includes(filter.search.toLowerCase());
       const matchesType = filter.type === 'all' || e.type === filter.type;
-      const matchesWorker = filter.workerId === 'all' || e.workerId === parseInt(filter.workerId);
+      const matchesWorker = filter.workerId === 'all' || e.worker_id === parseInt(filter.workerId);
       
       let matchesPeriod = true;
       const expenseDate = parseISO(e.date);
@@ -46,16 +46,17 @@ const ExpenseList = () => {
   const filteredExpenses = getFilteredExpenses();
 
   const exportToCSV = () => {
-    const headers = ['Date', 'Description', 'Amount', 'Category', 'Type', 'Worker', 'Invoice', 'Reimbursed'];
+    const headers = ['Date', 'Description', 'Amount', 'Category', 'Type', 'Worker', 'Invoice', 'Reimbursed', 'Status'];
     const rows = filteredExpenses.map(e => [
       e.date,
       e.description,
       e.amount,
       e.category,
       e.type,
-      workers.find(w => w.id === e.workerId)?.name || 'Unknown',
-      e.invoiceNumber || 'N/A',
-      e.type === 'legitimate_self' ? (e.reimbursed ? 'YES' : 'NO') : 'N/A'
+      workers.find(w => w.id === e.worker_id)?.name || 'Unknown',
+      e.invoice_number || 'N/A',
+      e.type === 'legitimate_self' ? (e.reimbursed ? 'YES' : 'NO') : 'N/A',
+      e.status
     ]);
 
     const csvContent = "\uFEFF" + [headers, ...rows].map(r => r.join(";")).join("\n");
@@ -153,7 +154,6 @@ const ExpenseList = () => {
         </div>
       </div>
 
-      {/* Desktop Table View */}
       <div className="glass-card desktop-only" style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
@@ -161,9 +161,9 @@ const ExpenseList = () => {
               <th style={{ padding: 'var(--space-lg)' }}>Date</th>
               <th style={{ padding: 'var(--space-lg)' }}>Description</th>
               <th style={{ padding: 'var(--space-lg)' }}>Worker</th>
-              <th style={{ padding: 'var(--space-lg)' }}>Type</th>
               <th style={{ padding: 'var(--space-lg)' }}>Amount</th>
-              <th style={{ padding: 'var(--space-lg)' }}>Reimbursed?</th>
+              <th style={{ padding: 'var(--space-lg)' }}>Status</th>
+              <th style={{ padding: 'var(--space-lg)' }}>Reimbursement</th>
               <th style={{ padding: 'var(--space-lg)' }}></th>
             </tr>
           </thead>
@@ -178,18 +178,23 @@ const ExpenseList = () => {
                   <td style={{ padding: 'var(--space-lg)', fontSize: '0.875rem' }}>{e.date}</td>
                   <td style={{ padding: 'var(--space-lg)' }}>
                     <div style={{ fontWeight: '600' }}>{e.description}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{e.category} • {e.invoiceNumber || 'Manual entry'}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{e.category} • {e.invoice_number || 'Manual'}</div>
                   </td>
-                  <td style={{ padding: 'var(--space-lg)', fontSize: '0.875rem' }}>{workers.find(w => w.id === e.workerId)?.name}</td>
-                  <td style={{ padding: 'var(--space-lg)' }}>
-                    <span style={{ 
-                      fontSize: '0.75rem', 
-                      color: getTypeColor(e.type)
-                    }}>
-                      {e.type.replace('_', ' ').replace('legitimate ', '').replace('false ', 'False: ')}
-                    </span>
-                  </td>
+                  <td style={{ padding: 'var(--space-lg)', fontSize: '0.875rem' }}>{workers.find(w => w.id === e.worker_id)?.name}</td>
                   <td style={{ padding: 'var(--space-lg)', fontWeight: '700' }}>€{e.amount.toFixed(2)}</td>
+                  <td style={{ padding: 'var(--space-lg)' }}>
+                    <button 
+                      onClick={() => updateExpense({ ...e, status: e.status === 'approved' ? 'pending' : 'approved' })}
+                      style={{ 
+                        display: 'flex', alignItems: 'center', gap: '0.5rem', 
+                        color: e.status === 'approved' ? 'var(--info)' : 'var(--warning)',
+                        fontSize: '0.75rem', fontWeight: '700', background: 'transparent'
+                      }}
+                    >
+                      {e.status === 'approved' ? <CheckCircle size={16} /> : <Clock size={16} />}
+                      {e.status.toUpperCase()}
+                    </button>
+                  </td>
                   <td style={{ padding: 'var(--space-lg)' }}>
                     {e.type === 'legitimate_self' ? (
                       <button 
@@ -197,17 +202,16 @@ const ExpenseList = () => {
                         style={{ 
                           display: 'flex', alignItems: 'center', gap: '0.5rem', 
                           color: e.reimbursed ? 'var(--success)' : 'var(--text-muted)',
-                          padding: '0.5rem', borderRadius: '0.5rem',
+                          padding: '0.4rem 0.8rem', borderRadius: '0.5rem',
                           background: e.reimbursed ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 255, 255, 0.05)',
                           border: `1px solid ${e.reimbursed ? 'var(--success)' : 'var(--glass-border)'}`,
                           fontWeight: '600', fontSize: '0.75rem'
                         }}
                       >
-                        {e.reimbursed ? <CheckCircle2 size={16} /> : <Circle size={16} />}
                         {e.reimbursed ? 'REIMBURSED' : 'PENDING'}
                       </button>
                     ) : (
-                      <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>N/A</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{e.type.includes('card') ? 'CARD' : 'N/A'}</span>
                     )}
                   </td>
                   <td style={{ padding: 'var(--space-lg)' }}>
@@ -224,60 +228,54 @@ const ExpenseList = () => {
 
       {/* Mobile Card View */}
       <div className="mobile-only" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-        {filteredExpenses.length === 0 ? (
-          <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No expenses found.</p>
-        ) : (
-          filteredExpenses.map(e => (
-            <div key={e.id} className="glass-card" style={{ padding: 'var(--space-md)', display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{e.date}</p>
-                  <p style={{ fontWeight: '700', fontSize: '1rem' }}>{e.description}</p>
-                </div>
-                <p style={{ fontWeight: '800', fontSize: '1.125rem' }}>€{e.amount.toFixed(2)}</p>
+        {filteredExpenses.map(e => (
+          <div key={e.id} className="glass-card" style={{ padding: 'var(--space-md)', display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{e.date}</p>
+                <p style={{ fontWeight: '700', fontSize: '1rem' }}>{e.description}</p>
               </div>
-              
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+              <p style={{ fontWeight: '800', fontSize: '1.125rem' }}>€{e.amount.toFixed(2)}</p>
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                 <span style={{ fontSize: '0.625rem', padding: '2px 6px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }}>{e.category}</span>
-                <span style={{ fontSize: '0.625rem', color: getTypeColor(e.type), fontWeight: '600' }}>
-                  {e.type.replace('_', ' ').replace('legitimate ', '').toUpperCase()}
+                <span style={{ 
+                  fontSize: '0.625rem', fontWeight: '700', 
+                  color: e.status === 'approved' ? 'var(--info)' : 'var(--warning)' 
+                }}>
+                  {e.status.toUpperCase()}
                 </span>
-                <span style={{ fontSize: '0.625rem', color: 'var(--text-secondary)' }}>• {workers.find(w => w.id === e.workerId)?.name}</span>
               </div>
+              <span style={{ fontSize: '0.625rem', color: 'var(--text-secondary)' }}>{workers.find(w => w.id === e.worker_id)?.name}</span>
+            </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px', paddingTop: '8px', borderTop: '1px solid var(--glass-border)' }}>
-                {e.type === 'legitimate_self' ? (
-                  <button 
-                    onClick={() => updateExpense({ ...e, reimbursed: !e.reimbursed })}
-                    style={{ 
-                      display: 'flex', alignItems: 'center', gap: '0.5rem', 
-                      color: e.reimbursed ? 'var(--success)' : 'var(--text-muted)',
-                      fontSize: '0.75rem', fontWeight: '700'
-                    }}
-                  >
-                    {e.reimbursed ? <CheckCircle2 size={16} /> : <Circle size={16} />}
-                    {e.reimbursed ? 'REIMBURSED' : 'MARK AS PAID'}
-                  </button>
-                ) : <div />}
-                
-                <button onClick={() => deleteExpense(e.id)} style={{ color: 'var(--error)', padding: '4px' }}>
-                  <Trash2 size={18} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px', paddingTop: '8px', borderTop: '1px solid var(--glass-border)' }}>
+              {e.type === 'legitimate_self' ? (
+                <button 
+                  onClick={() => updateExpense({ ...e, reimbursed: !e.reimbursed })}
+                  style={{ color: e.reimbursed ? 'var(--success)' : 'var(--text-muted)', fontSize: '0.75rem', fontWeight: '700' }}
+                >
+                  {e.reimbursed ? 'REIMBURSED' : 'MARK PAID'}
                 </button>
+              ) : <div />}
+              
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button 
+                  onClick={() => updateExpense({ ...e, status: e.status === 'approved' ? 'pending' : 'approved' })}
+                  style={{ color: 'var(--text-secondary)' }}
+                ><CheckCircle size={18} /></button>
+                <button onClick={() => deleteExpense(e.id)} style={{ color: 'var(--error)' }}><Trash2 size={18} /></button>
               </div>
             </div>
-          ))
-        )}
+          </div>
+        ))}
       </div>
 
       <style>{`
         .table-row-hover:hover { background: rgba(255,255,255,0.02); }
         .delete-btn:hover { color: var(--error) !important; }
-        @media print {
-          aside, header, .glass-card:first-child, .delete-btn { display: none !important; }
-          body { background: white !important; color: black !important; }
-          .glass-card { background: none !important; border: 1px solid #eee !important; box-shadow: none !important; }
-          table th, table td { color: black !important; border-bottom: 1px solid #eee !important; }
-        }
       `}</style>
     </div>
   );
