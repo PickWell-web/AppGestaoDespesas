@@ -48,7 +48,7 @@ const ExpenseList = () => {
     const rows = filteredExpenses.map(e => [
       e.date, e.description, e.amount, e.category, e.type,
       workers.find(w => w.id === e.worker_id)?.name || 'Unknown', 
-      e.status === 'approved' ? 'REIMBURSED' : 'PENDING'
+      e.type.includes('card') ? 'N/A' : (e.status === 'approved' ? 'REIMBURSED' : 'PENDING')
     ]);
 
     const csvContent = "\uFEFF" + [headers, ...rows].map(r => r.join(";")).join("\n");
@@ -63,7 +63,13 @@ const ExpenseList = () => {
   const handlePrint = () => window.print();
 
   const getTypeLabel = (type) => {
-    return type.replace('_', ' ').replace('legitimate', '').replace('false', 'False:').toUpperCase();
+    switch(type) {
+      case 'legitimate_self': return 'Legit - Self Paid';
+      case 'legitimate_card': return 'Legit - Company Card';
+      case 'false_self': return 'False - Self Paid';
+      case 'false_card': return 'False - Company Card';
+      default: return type;
+    }
   };
 
   return (
@@ -156,17 +162,21 @@ const ExpenseList = () => {
                 <td style={{ padding: '1rem', fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>{workers.find(w => w.id === e.worker_id)?.name}</td>
                 <td style={{ padding: '1rem', fontWeight: '800', color: 'var(--text-primary)' }}>€{e.amount.toFixed(2)}</td>
                 <td style={{ padding: '1rem' }}>
-                  <button 
-                    onClick={() => updateExpense({ ...e, status: e.status === 'approved' ? 'pending' : 'approved' })}
-                    style={{ 
-                      display: 'flex', alignItems: 'center', gap: '0.4rem', 
-                      color: e.status === 'approved' ? 'var(--success)' : 'var(--warning)',
-                      fontSize: '0.6875rem', fontWeight: '800', background: 'none', border: 'none', cursor: 'pointer'
-                    }}
-                  >
-                    {e.status === 'approved' ? <CheckCircle size={14} /> : <Clock size={14} />}
-                    {e.status === 'approved' ? 'REIMBURSED' : 'PENDING'}
-                  </button>
+                  {e.type.includes('card') ? (
+                    <span style={{ fontSize: '0.6875rem', fontWeight: '800', color: 'var(--text-muted)' }}>N/A</span>
+                  ) : (
+                    <button 
+                      onClick={() => updateExpense({ ...e, status: e.status === 'approved' ? 'pending' : 'approved' })}
+                      style={{ 
+                        display: 'flex', alignItems: 'center', gap: '0.4rem', 
+                        color: e.status === 'approved' ? 'var(--success)' : 'var(--warning)',
+                        fontSize: '0.6875rem', fontWeight: '800', background: 'none', border: 'none', cursor: 'pointer'
+                      }}
+                    >
+                      {e.status === 'approved' ? <CheckCircle size={14} /> : <Clock size={14} />}
+                      {e.status === 'approved' ? 'REIMBURSED' : 'PENDING'}
+                    </button>
+                  )}
                 </td>
                 <td style={{ padding: '1rem' }}>
                   <button onClick={() => deleteExpense(e.id)} style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}><Trash2 size={16} /></button>
@@ -193,16 +203,18 @@ const ExpenseList = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-primary)' }}>
               <span style={{ 
                 fontSize: '0.6875rem', fontWeight: '800', 
-                color: e.status === 'approved' ? 'var(--success)' : 'var(--warning)'
+                color: e.type.includes('card') ? 'var(--text-muted)' : (e.status === 'approved' ? 'var(--success)' : 'var(--warning)')
               }}>
-                {e.status === 'approved' ? 'REIMBURSED' : 'PENDING'}
+                {e.type.includes('card') ? 'N/A' : (e.status === 'approved' ? 'REIMBURSED' : 'PENDING')}
               </span>
               
               <div style={{ display: 'flex', gap: '1rem' }}>
-                <button 
-                  onClick={() => updateExpense({ ...e, status: e.status === 'approved' ? 'pending' : 'approved' })}
-                  style={{ color: 'var(--text-secondary)', background: 'none', border: 'none' }}
-                ><CheckCircle size={18} /></button>
+                {!e.type.includes('card') && (
+                  <button 
+                    onClick={() => updateExpense({ ...e, status: e.status === 'approved' ? 'pending' : 'approved' })}
+                    style={{ color: 'var(--text-secondary)', background: 'none', border: 'none' }}
+                  ><CheckCircle size={18} /></button>
+                )}
                 <button onClick={() => deleteExpense(e.id)} style={{ color: 'var(--error)', background: 'none', border: 'none' }}><Trash2 size={18} /></button>
               </div>
             </div>
