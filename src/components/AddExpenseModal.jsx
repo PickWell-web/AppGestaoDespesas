@@ -127,7 +127,7 @@ const AddExpenseModal = ({ onClose }) => {
             }}>
               <Paperclip size={18} style={{ color: file ? 'var(--success)' : 'var(--text-muted)' }} />
               <span style={{ fontSize: '0.8125rem', color: file ? 'var(--text-primary)' : 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {file ? file.name : 'No file selected'}
+                {file ? file.name : 'Take photo or select from gallery'}
               </span>
               <input 
                 type="file" 
