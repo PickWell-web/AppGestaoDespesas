@@ -55,6 +55,10 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: 'Inter', -apple-system, sans-serif;
   background-color: var(--bg-secondary);
@@ -62,6 +66,7 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   transition: background-color 0.3s ease, color 0.3s ease;
+  line-height: 1.5;
 }
 
 .clean-card {
@@ -86,6 +91,7 @@ body {
   cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   transition: all 0.2s;
 }
@@ -107,6 +113,9 @@ body {
   padding: 0.75rem 1.25rem;
   font-weight: 600;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .secondary-button:hover {
@@ -131,8 +140,13 @@ body {
   }
 }
 
-.dashboard-grid { flex-direction: row; }
-@media (max-width: 768px) {
+.dashboard-grid { 
+  display: flex;
+  flex-direction: row; 
+  gap: var(--space-lg);
+}
+
+@media (max-width: 1024px) {
   .dashboard-grid { flex-direction: column !important; }
 }
 
@@ -146,4 +160,18 @@ body {
 ::-webkit-scrollbar-thumb {
   background: var(--border-primary);
   border-radius: 10px;
+}
+
+/* Print Overrides */
+@media print {
+  .desktop-only, .mobile-only, .secondary-button, .primary-button {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+  }
+  .clean-card {
+    border: none !important;
+    box-shadow: none !important;
+  }
 }

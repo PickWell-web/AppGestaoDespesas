@@ -3,7 +3,7 @@ import { useExpenses } from '../context/ExpenseContext';
 import { Wallet, CreditCard, TrendingDown, Receipt } from 'lucide-react';
 
 const StatCard = ({ title, amount, icon: Icon, color }) => (
-  <div className="clean-card" style={{ padding: 'var(--space-lg)', flex: 1, minWidth: '260px' }}>
+  <div className="clean-card" style={{ padding: 'var(--space-lg)', flex: '1 1 280px' }}>
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
       <div style={{ 
         background: 'var(--bg-secondary)', 
@@ -59,9 +59,9 @@ const Dashboard = () => {
       </section>
 
       {/* Main Grid */}
-      <div className="dashboard-grid" style={{ display: 'flex', gap: 'var(--space-lg)' }}>
+      <div className="dashboard-grid">
         {/* Recent Activity */}
-        <div className="clean-card" style={{ padding: 'var(--space-lg)', flex: 2 }}>
+        <div className="clean-card" style={{ padding: 'var(--space-lg)', flex: 2, minWidth: 0 }}>
           <h2 style={{ marginBottom: '1.25rem', fontSize: '1rem', fontWeight: '700', color: 'var(--text-primary)' }}>Recent Activity</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {recentExpenses.length === 0 ? (
@@ -75,24 +75,25 @@ const Dashboard = () => {
                   padding: '0.875rem',
                   border: '1px solid var(--border-primary)',
                   borderRadius: '0.75rem',
-                  background: 'var(--bg-secondary)'
+                  background: 'var(--bg-secondary)',
+                  gap: '1rem'
                 }}>
-                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    <div style={{ color: 'var(--text-muted)' }}>
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', minWidth: 0 }}>
+                    <div style={{ color: 'var(--text-muted)', flexShrink: 0 }}>
                       <Receipt size={18} />
                     </div>
-                    <div>
-                      <p style={{ fontWeight: '600', fontSize: '0.875rem', color: 'var(--text-primary)' }}>{expense.description}</p>
+                    <div style={{ minWidth: 0 }}>
+                      <p style={{ fontWeight: '600', fontSize: '0.875rem', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{expense.description}</p>
                       <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{expense.category} • {expense.date}</p>
                     </div>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     <p style={{ fontWeight: '700', fontSize: '0.875rem', color: 'var(--text-primary)' }}>€{expense.amount.toFixed(2)}</p>
                     <span style={{ 
                       fontSize: '0.625rem', fontWeight: '800', 
                       color: expense.status === 'approved' ? 'var(--success)' : 'var(--warning)'
                     }}>
-                      {expense.status.toUpperCase()}
+                      {expense.status === 'approved' ? 'REIMBURSED' : 'PENDING'}
                     </span>
                   </div>
                 </div>
@@ -102,9 +103,9 @@ const Dashboard = () => {
         </div>
 
         {/* Budget Status */}
-        <div className="clean-card" style={{ padding: 'var(--space-lg)', flex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
+        <div className="clean-card" style={{ padding: 'var(--space-lg)', flex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', minWidth: '280px' }}>
           <h2 style={{ fontSize: '1rem', fontWeight: '700', color: 'var(--text-primary)' }}>Budget Overview</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', padding: '1rem 0' }}>
             <div style={{ position: 'relative', width: '110px', height: '110px' }}>
               <svg width="110" height="110" viewBox="0 0 100 100">
                 <circle cx="50" cy="50" r="44" fill="none" stroke="var(--border-primary)" strokeWidth="8" />

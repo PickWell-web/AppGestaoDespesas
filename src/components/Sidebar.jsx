@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Receipt, User, BarChart3, Users } from 'lucide-react';
+import { LayoutDashboard, Receipt, User, BarChart3, Users, ArrowLeftRight } from 'lucide-react';
 import { useExpenses } from '../context/ExpenseContext';
 
 const Sidebar = ({ activeTab, setActiveTab }) => {
@@ -9,6 +9,14 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
     { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
     { id: 'expenses', label: 'Expenses', icon: Receipt },
   ];
+
+  const currentWorker = workers.find(w => w.id === currentWorkerId);
+
+  const handleSwitch = () => {
+    // Correctly toggle between ID 1 and 2
+    const nextId = currentWorkerId === 1 ? 2 : 1;
+    setCurrentWorkerId(nextId);
+  };
 
   return (
     <>
@@ -23,7 +31,8 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
         position: 'sticky',
         top: 0,
         background: 'var(--bg-primary)',
-        borderRight: '1px solid var(--border-primary)'
+        borderRight: '1px solid var(--border-primary)',
+        overflowY: 'auto'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', padding: '0 0.5rem' }}>
           <div style={{ 
@@ -109,14 +118,14 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
         bottom: 0,
         left: 0,
         right: 0,
-        height: '72px',
-        zIndex: 100,
+        height: '80px',
+        zIndex: 1000,
         background: 'var(--bg-primary)',
         borderTop: '1px solid var(--border-primary)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-around',
-        padding: '0 1rem',
+        padding: '0 1rem 1.5rem 1rem', // Extra bottom padding for home indicators
       }}>
         {menuItems.map((item) => (
           <button
@@ -130,16 +139,17 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
               border: 'none',
               background: 'none',
               color: activeTab === item.id ? 'var(--text-primary)' : 'var(--text-muted)',
-              transition: 'all 0.2s'
+              transition: 'all 0.2s',
+              flex: 1
             }}
           >
-            <item.icon size={22} />
+            <item.icon size={22} style={{ color: activeTab === item.id ? 'var(--accent-primary)' : 'inherit' }} />
             <span style={{ fontSize: '0.6875rem', fontWeight: '700' }}>{item.label}</span>
           </button>
         ))}
         
         <button
-          onClick={() => setCurrentWorkerId(currentWorkerId === 1 ? 2 : 1)}
+          onClick={handleSwitch}
           style={{
             display: 'flex',
             flexDirection: 'column',
@@ -147,11 +157,26 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
             gap: '4px',
             border: 'none',
             background: 'none',
-            color: 'var(--text-muted)',
+            color: 'var(--text-primary)',
+            flex: 1,
+            position: 'relative'
           }}
         >
-          <Users size={22} />
-          <span style={{ fontSize: '0.6875rem', fontWeight: '700' }}>SWITCH</span>
+          <div style={{ 
+            background: 'var(--bg-secondary)', 
+            padding: '4px 8px', 
+            borderRadius: '6px', 
+            border: '1px solid var(--border-primary)',
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '4px' 
+          }}>
+            <ArrowLeftRight size={16} />
+            <span style={{ fontSize: '0.625rem', fontWeight: '800' }}>
+              {currentWorker?.name.split(' ')[0].toUpperCase()}
+            </span>
+          </div>
+          <span style={{ fontSize: '0.625rem', fontWeight: '700', color: 'var(--text-muted)' }}>SWITCH</span>
         </button>
       </div>
     </>
