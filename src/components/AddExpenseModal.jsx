@@ -24,35 +24,6 @@ const AddExpenseModal = ({ onClose }) => {
     { id: 'false_card', label: 'False - Company Card' }
   ];
 
-  const parsePortugueseQR = (qrString) => {
-    const fields = qrString.split('*');
-    const data = {};
-    fields.forEach(field => {
-      const [key, value] = field.split(':');
-      if (key && value) data[key] = value;
-    });
-
-    return {
-      tax_id: data['A'] || '', 
-      amount: data['I1'] ? parseFloat(data['I1']) : 0, 
-      date: data['F'] ? `${data['F'].slice(0, 4)}-${data['F'].slice(4, 6)}-${data['F'].slice(6, 8)}` : '',
-      invoice_number: data['G'] || ''
-    };
-  };
-
-  const handleQRScan = () => {
-    const mockQR = "A:513151325*B:999999999*C:PT*D:FT*E:N*F:20240508*G:FT 2024/123*H:0*I1:45.50*I3:0.00*I4:0.00*I5:8.51*I7:36.99*I8:8.51*";
-    const result = parsePortugueseQR(mockQR);
-    
-    setFormData(prev => ({
-      ...prev,
-      amount: result.amount,
-      date: result.date || prev.date,
-      tax_id: result.tax_id,
-      invoice_number: result.invoice_number,
-      description: `Invoice ${result.invoice_number}`
-    }));
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -88,17 +59,6 @@ const AddExpenseModal = ({ onClose }) => {
           <button onClick={onClose} style={{ color: 'var(--text-muted)' }}><X /></button>
         </div>
 
-        <button 
-          onClick={handleQRScan}
-          style={{
-            width: '100%', padding: 'var(--space-md)', borderRadius: '0.75rem',
-            background: 'rgba(255, 255, 255, 0.05)', border: '1px dashed var(--glass-border)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-            color: 'var(--accent-primary)', fontWeight: '600'
-          }}
-        >
-          <QrCode size={20} /> Scan Portuguese QR Code (Simulated)
-        </button>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-md)' }}>

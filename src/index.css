@@ -1,34 +1,25 @@
 :root {
-  /* Color Palette */
-  --bg-primary: #0a0a0c;
-  --bg-secondary: #16161a;
-  --bg-card: rgba(255, 255, 255, 0.03);
-  --accent-primary: #6366f1; /* Indigo */
-  --accent-secondary: #a855f7; /* Purple */
-  --text-primary: #f8fafc;
+  --bg-primary: #050505;
+  --bg-secondary: #0f0f12;
+  --bg-card: rgba(255, 255, 255, 0.04);
+  --accent-primary: #818cf8;
+  --accent-secondary: #c084fc;
+  --text-primary: #fdfdfd;
   --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  
-  /* Status Colors */
+  --text-muted: #475569;
   --success: #10b981;
   --warning: #f59e0b;
   --error: #ef4444;
   --info: #3b82f6;
-
-  /* Glassmorphism */
-  --glass-bg: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-  --glass-blur: blur(12px);
-
-  /* Spacing */
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+  --glass-blur: blur(20px);
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
   --space-md: 1rem;
   --space-lg: 1.5rem;
   --space-xl: 2rem;
-
-  /* Transitions */
   --transition-fast: 0.2s ease;
   --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -37,22 +28,15 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', -apple-system, sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
-}
-
-button {
-  cursor: pointer;
-  border: none;
-  background: none;
-  font-family: inherit;
-  transition: var(--transition-fast);
+  overflow-x: hidden;
 }
 
 .glass-card {
@@ -60,7 +44,7 @@ button {
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
-  border-radius: 1rem;
+  border-radius: 1.25rem;
   box-shadow: var(--glass-shadow);
 }
 
@@ -74,46 +58,30 @@ button {
   -webkit-text-fill-color: transparent;
 }
 
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--bg-card);
-  border-radius: 10px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+button:active {
+  transform: scale(0.96);
 }
 
-/* Mobile Responsiveness */
+.mobile-only { display: none !important; }
+
 @media (max-width: 768px) {
   :root {
-    --space-xl: 1rem;
-    --space-lg: 0.75rem;
+    --space-xl: 1.25rem;
+    --space-lg: 1rem;
+    --space-md: 0.75rem;
   }
+  
+  .desktop-only { display: none !important; }
+  .mobile-only { display: flex !important; }
   
   .app-container {
     flex-direction: column !important;
   }
   
   main {
-    padding: var(--space-md) !important;
-    padding-bottom: 80px !important;
+    padding: var(--space-xl) !important;
+    padding-bottom: 110px !important; /* Space for FAB and Nav */
   }
-
-  .glass-card {
-    border-radius: 0.75rem;
-  }
-}
-
-.mobile-only { display: none; }
-@media (max-width: 768px) {
-  .mobile-only { display: block; }
-  .desktop-only { display: none; }
 }
 
 .dashboard-grid { flex-direction: row; }
