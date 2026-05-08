@@ -48,7 +48,7 @@ const ExpenseList = () => {
     const rows = filteredExpenses.map(e => [
       e.date, e.description, e.amount, e.category, e.type,
       workers.find(w => w.id === e.worker_id)?.name || 'Unknown', 
-      e.type.includes('card') ? 'N/A' : (e.status === 'approved' ? 'REIMBURSED' : 'PENDING')
+      (e.type || '').includes('card') ? 'N/A' : (e.status === 'approved' ? 'REIMBURSED' : 'PENDING')
     ]);
 
     const csvContent = "\uFEFF" + [headers, ...rows].map(r => r.join(";")).join("\n");
@@ -175,7 +175,7 @@ const ExpenseList = () => {
                 <td style={{ padding: '1rem', fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>{workers.find(w => w.id === e.worker_id)?.name}</td>
                 <td style={{ padding: '1rem', fontWeight: '800', color: 'var(--text-primary)' }}>€{e.amount.toFixed(2)}</td>
                 <td style={{ padding: '1rem' }}>
-                  {e.type.includes('card') ? (
+                  {(e.type || '').includes('card') ? (
                     <span style={{ fontSize: '0.6875rem', fontWeight: '800', color: 'var(--text-muted)' }}>N/A</span>
                   ) : (
                     <button 
@@ -223,13 +223,13 @@ const ExpenseList = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-primary)' }}>
               <span style={{ 
                 fontSize: '0.6875rem', fontWeight: '800', 
-                color: e.type.includes('card') ? 'var(--text-muted)' : (e.status === 'approved' ? 'var(--success)' : 'var(--warning)')
+                color: (e.type || '').includes('card') ? 'var(--text-muted)' : (e.status === 'approved' ? 'var(--success)' : 'var(--warning)')
               }}>
-                {e.type.includes('card') ? 'N/A' : (e.status === 'approved' ? 'REIMBURSED' : 'PENDING')}
+                {(e.type || '').includes('card') ? 'N/A' : (e.status === 'approved' ? 'REIMBURSED' : 'PENDING')}
               </span>
               
               <div style={{ display: 'flex', gap: '1rem' }}>
-                {!e.type.includes('card') && (
+                {!(e.type || '').includes('card') && (
                   <button 
                     onClick={() => updateExpense({ ...e, status: e.status === 'approved' ? 'pending' : 'approved' })}
                     style={{ color: 'var(--text-secondary)', background: 'none', border: 'none' }}
