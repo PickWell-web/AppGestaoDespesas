@@ -1,9 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { useAuth } from './AuthContext';
+
+const WORKER_EMAIL_MAP = {
+  'sc@crest-cp.com': 2,
+};
 
 const ExpenseContext = createContext();
 
 export const ExpenseProvider = ({ children }) => {
+  const { user } = useAuth();
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState([]);
@@ -13,7 +19,8 @@ export const ExpenseProvider = ({ children }) => {
     { id: 2, name: 'Simão Coimbra', budget: 500 }
   ]);
 
-  const [currentWorkerId, setCurrentWorkerId] = useState(1);
+  const defaultWorkerId = WORKER_EMAIL_MAP[user?.email] ?? 1;
+  const [currentWorkerId, setCurrentWorkerId] = useState(defaultWorkerId);
 
   // Apply theme to document
   useEffect(() => {

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { ExpenseProvider, useExpenses } from './context/ExpenseContext';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import ExpenseList from './components/ExpenseList';
 import AddExpenseModal from './components/AddExpenseModal';
+import LoginPage from './components/LoginPage';
 import { Bell, Plus, Moon, Sun } from 'lucide-react';
 import './index.css';
 
@@ -113,11 +115,33 @@ function AppContent() {
   );
 }
 
-function App() {
+function AuthGate() {
+  const { session, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-primary)' }}>
+        <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Loading...</div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <LoginPage />;
+  }
+
   return (
     <ExpenseProvider>
       <AppContent />
     </ExpenseProvider>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AuthGate />
+    </AuthProvider>
   );
 }
 

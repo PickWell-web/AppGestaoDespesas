@@ -1,9 +1,11 @@
 import React from 'react';
-import { LayoutDashboard, Receipt, User, BarChart3, Users, ArrowLeftRight } from 'lucide-react';
+import { LayoutDashboard, Receipt, User, BarChart3, Users, ArrowLeftRight, LogOut } from 'lucide-react';
 import { useExpenses } from '../context/ExpenseContext';
+import { useAuth } from '../context/AuthContext';
 
 const Sidebar = ({ activeTab, setActiveTab }) => {
   const { workers, currentWorkerId, setCurrentWorkerId } = useExpenses();
+  const { signOut, user } = useAuth();
 
   const menuItems = [
     { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
@@ -109,6 +111,35 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
               ))}
             </div>
           </div>
+
+          <div style={{ padding: '0 0.25rem' }}>
+            <p style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', marginBottom: '0.375rem', fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {user?.email}
+            </p>
+            <button
+              onClick={signOut}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.5rem 0.75rem',
+                borderRadius: '0.5rem',
+                border: '1.5px solid var(--border-primary)',
+                background: 'transparent',
+                color: 'var(--text-secondary)',
+                fontSize: '0.8125rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                width: '100%',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+            >
+              <LogOut size={15} />
+              Sign out
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -177,6 +208,23 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
             </span>
           </div>
           <span style={{ fontSize: '0.625rem', fontWeight: '700', color: 'var(--text-muted)' }}>SWITCH</span>
+        </button>
+
+        <button
+          onClick={signOut}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '4px',
+            border: 'none',
+            background: 'none',
+            color: 'var(--text-muted)',
+            flex: 1,
+          }}
+        >
+          <LogOut size={22} />
+          <span style={{ fontSize: '0.6875rem', fontWeight: '700' }}>Sign out</span>
         </button>
       </div>
     </>
